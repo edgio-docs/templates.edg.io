@@ -1,6 +1,7 @@
 import { brotliCompressSync } from 'zlib'
-import { CustomCacheKey, Router } from '@edgio/core/router'
+import { Router } from '@edgio/core/router'
 import { isProductionBuild } from '@edgio/core/environment'
+import CustomCacheKey from '@edgio/core/router/CustomCacheKey'
 
 const BROTLI_ENCODING_REGEX = /\bbr\b/
 
@@ -20,13 +21,13 @@ const transformResponse = (res, req) => {
 
 const router = new Router()
 
-if (isProductionBuild()) {
-	router.static('.vercel/output/static')
-}
-
 router.match('/service-worker.js', ({ serviceWorker }) => {
 	serviceWorker('.edgio/temp/service-worker.js')
 })
+
+if (isProductionBuild()) {
+	router.static('.vercel/output/static')
+}
 
 router.match('/', ({ renderWithApp, removeUpstreamResponseHeader, cache }) => {
 	removeUpstreamResponseHeader('cache-control')
@@ -98,9 +99,5 @@ router.match(
 		renderWithApp({ transformResponse })
 	}
 )
-
-router.fallback(({ send }) => {
-	send('Blocked', 403)
-})
 
 export default router
